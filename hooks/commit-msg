@@ -1,0 +1,43 @@
+#!/bin/sh
+
+echo "🔧 commit-msg hook triggered" >&2
+
+commit_msg_file=$1
+commit_msg=$(cat "$commit_msg_file")
+
+# Get current branch name
+branch_name=$(git rev-parse --abbrev-ref HEAD)
+
+# Allowed commit types
+valid_types="feat|fix|chore|refactor"
+
+# Jira key pattern: ALPHANUMERIC + dash + DIGITS
+jira_key_pattern="[A-Za-z0-9]+-[0-9]+"
+
+# Branch name pattern: type/JIRA-KEY
+branch_pattern="^($valid_types)/($jira_key_pattern)$"
+
+# Validate branch name
+if ! echo "$branch_name" | grep -qE "$branch_pattern"; then
+  echo "❌ ERROR: Invalid branch name: $branch_name"
+  echo "➡️  Branch names must follow the pattern: [feat|fix|chore|refactor]/[JIRA-KEY]"
+  echo "➡️  Examples: feat/SUW-1234, fix/ABC-5678, chore/XYZ-999"
+  exit 1
+fi
+
+# Validate commit message format: type(JIRA-KEY): description
+commit_pattern="^($valid_types)\(($jira_key_pattern)\): .+"
+
+if ! echo "$commit_msg" | grep -qE "$commit_pattern"; then
+  echo "❌ ERROR: Invalid commit message format"
+  echo "➡️  Required format: <type>(<JIRA-KEY>): <description>"
+  echo "➡️  Valid types: feat | fix | chore | refactor"
+  echo "➡️  Examples:"
+  echo "    ✅ feat(SUW-1234): Add user authentication"
+  echo "    ✅ fix(ABC-5678): Correct input validation"
+  echo "    ✅ chore(XYZ-999): Update dependencies"
+  echo "    ✅ refactor(DEF-123): Simplify payment logic"
+  exit 1
+fi
+
+exit 0

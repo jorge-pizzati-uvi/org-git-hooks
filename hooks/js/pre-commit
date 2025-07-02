@@ -1,0 +1,26 @@
+#!/bin/sh
+
+echo "🔧 pre-commit hook triggered" >&2
+
+# Run lint-staged
+echo "📝 Running linting..." >&2
+npx lint-staged
+LINT_RESULT=$?
+
+if [ $LINT_RESULT -ne 0 ]; then
+  echo "❌ Linting failed. Please fix the issues and try again." >&2
+  exit 1
+fi
+
+# Run tests
+echo "🧪 Running tests..." >&2
+npm run test-build
+TEST_RESULT=$?
+
+if [ $TEST_RESULT -ne 0 ]; then
+  echo "❌ Tests failed. Please fix the issues and try again." >&2
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed" >&2
+exit 0
